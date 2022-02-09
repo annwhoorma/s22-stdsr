@@ -1,4 +1,4 @@
-from main import MRL99, Buffer
+from main import MRL98, Buffer
 
 buffers = [
     Buffer([12, 52, 72, 102, 132]),
@@ -13,8 +13,8 @@ buffers[1].full = True
 buffers[2].weight = 4
 buffers[2].full = True
 
-mrl99 = MRL99([0]*15, 3)
-res = mrl99.collapse(buffers)
+mrl98 = MRL98([0]*15, 3)
+res = mrl98.collapse(buffers)
 
 for buffer in buffers:
     print(buffer.__dict__)

@@ -72,7 +72,7 @@ class Buffer:
         except:
             return None
 
-class MRL99:
+class MRL98:
     '''
     A class to describe the steps of MRL99 algorithm
     '''
