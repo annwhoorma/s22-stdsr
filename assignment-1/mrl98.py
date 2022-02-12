@@ -6,8 +6,9 @@ empty buffers with input and COLLAPSE reclaims some of them by collapsing
 a chosen subset of full buffers. OUTPUT is invoked on the final set of full
 buffers. Different buffer collapsing policies correspond to different algorithms.
 '''
-
+from enum import Enum
 from math import ceil
+from queue import Full
 from typing import Tuple, Optional
 
 Element = int
@@ -15,6 +16,13 @@ Sequence = 'list[Element]'
 
 plus_inf  = float('inf')
 minus_inf = -plus_inf
+
+
+class Fullness(Enum):
+    FULL = 0
+    PARTIAL = 1
+    EMPTY = 2
+
 
 class Buffer:
     '''
@@ -34,7 +42,7 @@ class Buffer:
         assert new_level >= 0, 'buffer level must be a non-negative number'
         self.level = new_level
 
-    def populate(self, elements: list, is_initial:bool=False, weight:int=0, full:bool=False, is_mrl98:bool=True):
+    def populate(self, elements: list, is_initial:bool=False, weight:int=0, full:Fullness=Fullness.EMPTY, is_mrl98:bool=True):
         '''
         populate a buffer
         @param elements: a list of elements
@@ -43,9 +51,9 @@ class Buffer:
         @full: a label - whether the buffer is considered full or not
         '''
         self.elements = elements
-        if is_initial:
-            self.weight = 1 if is_mrl98 else 2
-            self.full = True
+        if is_initial and is_mrl98:
+            self.weight = 1
+            self.full = Fullness.FULL
         else:
             self.weight = weight
             self.full = full
@@ -56,7 +64,7 @@ class Buffer:
         sets all the properties to their initial state
         '''
         self.weight = 0
-        self.full = False
+        self.full = Fullness.EMPTY
         self.cursor = 0
 
     def incr_cursor(self):
@@ -116,10 +124,10 @@ class MRL98:
         @param buffer: an empty buffer to fill with next `self.be` values
         @return buffer: input buffer filled with values
         '''
-        assert buffer.full == False, 'the buffer should be empty'
+        assert buffer.full == Fullness.EMPTY, 'the buffer should be empty'
         assert len(self.input_sequence) >= 1, 'the input sequence must have at least one element'
         if self.be < len(self.input_sequence):
-            buffer.populate(self.input_sequence[:self.be], is_initial=True)
+            buffer.populate(self.input_sequence[:self.be], is_initial=True, is_mrl98=True)
             del self.input_sequence[:self.be]
         else:
             seq_len = len(self.input_sequence)
@@ -130,9 +138,9 @@ class MRL98:
             self.infs_added += more_elems
             infs = [plus_inf] * (more_elems // 2) + [minus_inf] * (more_elems // 2)
             elems = self.input_sequence[:seq_len] + infs
-            buffer.populate(elems, is_initial=True)
+            buffer.populate(elems, is_initial=True, is_mrl98=True)
             del self.input_sequence[:seq_len]
-        assert buffer.full and buffer.weight == 1, 'after NEW step, resulting buffer must be marked as full and have a weight of 1'
+        assert buffer.full == Fullness.FULL and buffer.weight == 1, 'after NEW step, resulting buffer must be marked as full and have a weight of 1'
         return buffer
 
 
@@ -143,7 +151,7 @@ class MRL98:
         @return buffer: Y (see section 3.2 from the original paper)
         '''
         assert len(buffers) >= 2, 'should be 2 or more buffers'
-        assert all(buffer.full and buffer.len() >= self.be for buffer in buffers), f'all buffers must be full and contain {self.be} or more elements'
+        assert all(buffer.full == Fullness.FULL and buffer.len() >= self.be for buffer in buffers), f'all buffers must be full and contain {self.be} or more elements'
 
         sequence = [] # new sequence, future Y
         sum_of_weights = 0
@@ -165,8 +173,8 @@ class MRL98:
             buffer.to_initial()
         # populate the first buffer from `buffers` with Y, other buffers will be empty: see section 3.2 from the original paper
         y = buffers[self.y_idx]
-        y.populate(sequence, weight=sum_of_weights, full=True)
-        assert y.full and y.len() >= self.be, f'Y must be full and contain >= {self.be} elements at the end of the COLLAPSE step'
+        y.populate(sequence, weight=sum_of_weights, full=Fullness.FULL, is_initial=False, is_mrl98=True)
+        assert y.full == Fullness.FULL and y.len() >= self.be, f'Y must be full and contain >= {self.be} elements at the end of the COLLAPSE step'
         return y
 
 
@@ -179,7 +187,7 @@ class MRL98:
         '''
         assert 0 <= phi <= 1, 'phi must be from [0, 1]'
         assert len(buffers) >= 2, 'should be 2 or more buffers'
-        assert all(buffer.full and buffer.len() >= self.be for buffer in buffers), f'all buffers must be full and contain >= {self.be} elements'
+        assert all(buffer.full == Fullness.FULL and buffer.len() >= self.be for buffer in buffers), f'all buffers must be full and contain >= {self.be} elements'
 
         phi_tick = self._calculate_phi_tick(phi)
         y = self.collapse(buffers)
