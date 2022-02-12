@@ -23,7 +23,7 @@ pages = {426–435},
 numpages = {10}
 }
 
-@inproceedings{Manku1999RandomST,
+@inproceedings{MRL99_Original,
   title={Random sampling techniques for space efficient online computation of order statistics of large datasets},
   author={Gurmeet Singh Manku and Sridhar Rajagopalan and Bruce G. Lindsay},
   booktitle={SIGMOD '99},
