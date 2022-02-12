@@ -22,3 +22,10 @@ month = {jun},
 pages = {426–435},
 numpages = {10}
 }
+
+@inproceedings{Manku1999RandomST,
+  title={Random sampling techniques for space efficient online computation of order statistics of large datasets},
+  author={Gurmeet Singh Manku and Sridhar Rajagopalan and Bruce G. Lindsay},
+  booktitle={SIGMOD '99},
+  year={1999}
+}
