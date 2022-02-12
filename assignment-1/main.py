@@ -52,12 +52,12 @@ def get_distribution(name: str, N: int, poisson_lambda: Optional[float], random_
     return gen_func(N)
 
 
-def run_several_times(runs: int, d, n, b, k, phi):
+def run_several_times(mrl_type: str, runs: int, d, n, b, k, phi):
     mrl98_values = []
     numpy_values = []
     for _ in range(runs):
         data = possible_d[d](n).tolist()
-        nalg = NewAlgorithm(data.copy(), b, k, phi)
+        nalg = NewAlgorithm(mrl_type, data.copy(), b, k, phi)
         value_at_phi = nalg.run()
         numpy_value_at_phi = numpy_solver.calculate_quantile(data, phi)
         mrl98_values.append(value_at_phi)
@@ -66,6 +66,7 @@ def run_several_times(runs: int, d, n, b, k, phi):
 
 
 @click.command()
+@click.argument('mrl_year', type=str, default=98)
 @click.argument('phi', type=float)
 @click.argument('runs', type=int, default=1)
 @click.argument('e', type=float, default=possible_e[0])
@@ -74,7 +75,8 @@ def run_several_times(runs: int, d, n, b, k, phi):
 @click.argument('poisson_lambda', type=int, default=5)
 @click.argument('random_start', type=int, default=0)
 @click.argument('random_finish', type=int, default=10)
-def main(phi, runs, e, n, d, poisson_lambda, random_start, random_finish):
+def main(mrl_year, phi, runs, e, n, d, poisson_lambda, random_start, random_finish):
+    assert '98' in mrl_year or '99' in mrl_year, 'MRL year should contain 98 or 99'
     assert 0 <= phi <= 1, 'phi must be between 0 and 1'
     assert e in possible_e, f'e must be from {possible_e}'
     assert n in possible_N, f'n must be from {possible_N}'
@@ -84,7 +86,7 @@ def main(phi, runs, e, n, d, poisson_lambda, random_start, random_finish):
     print('The Null Hypothesis (H0): MRL98 is as good as np.quantile()')
     print(f'Allowed error rate: {e}')
     print(f'Number of runs: {runs}\n')
-    mrl98_values, numpy_values = run_several_times(runs, d, n, b, k, phi)
+    mrl98_values, numpy_values = run_several_times(mrl_year, runs, d, n, b, k, phi)
     print('Done. Running 2-sample t-test...\n')
     _, p_value = ttest_ind(a=mrl98_values, b=numpy_values, equal_var=False)
     print(f'Mean of MRL98 results: {mean(mrl98_values)}')
