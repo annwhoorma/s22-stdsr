@@ -86,9 +86,9 @@ def plot_graph(x, y, title, xlabel, ylabel):
 @click.command()
 @click.argument('mrl_year', type=str, default=98)
 @click.argument('phi', type=float, default=0.2)
-@click.argument('runs', type=int, default=1)
-@click.argument('e', type=float, default=possible_e[4])
-@click.argument('n', type=int, default=possible_N[2])
+@click.argument('runs', type=int, default=5)
+@click.argument('e', type=float, default=possible_e[0])
+@click.argument('n', type=int, default=possible_N[0])
 @click.argument('d', type=str, default='normal')
 @click.argument('poisson_lambda', type=int, default=5)
 @click.argument('random_start', type=int, default=0)
@@ -113,15 +113,15 @@ def main(mrl_year, phi, runs, e, n, d, poisson_lambda, random_start, random_fini
     _, p_value = ttest_ind(a=mrl_values, b=numpy_values, equal_var=False)
     print(f'p_value of 2-sample t-test: {p_value}')
     print(f'Rejecting H0: {p_value > P_VALUE_THRESH}')
-    times = run_for_dataset_size_and_error(mrl_year, d, phi) # {(error, size): time_taken}
-    print(times)
-    values_per_error = {error: ([], []) for error in possible_e}
-    for error_size, time_taken in times.items():
-        values_per_error[error_size[0]][0].append(error_size[1])
-        values_per_error[error_size[0]][1].append(time_taken)
-    print('\nPlotting graphs...\n')
-    for error in possible_e:
-        plot_graph(values_per_error[error][0], values_per_error[error][1], f'At error {error}', 'dataset size', 'time taken (s)')
+    # times = run_for_dataset_size_and_error(mrl_year, d, phi) # {(error, size): time_taken}
+    # print(times)
+    # values_per_error = {error: ([], []) for error in possible_e}
+    # for error_size, time_taken in times.items():
+    #     values_per_error[error_size[0]][0].append(error_size[1])
+    #     values_per_error[error_size[0]][1].append(time_taken)
+    # print('\nPlotting graphs...\n')
+    # for error in possible_e:
+    #     plot_graph(values_per_error[error][0], values_per_error[error][1], f'At error {error}', 'dataset size', 'time taken (s)')
 
 
 def run_for_dataset_size_and_error(mrl_type: str, d, phi):
