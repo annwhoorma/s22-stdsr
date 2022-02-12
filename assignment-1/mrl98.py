@@ -187,8 +187,8 @@ class MRL98:
         '''
         assert 0 <= phi <= 1, 'phi must be from [0, 1]'
         assert len(buffers) >= 2, 'should be 2 or more buffers'
-        assert all(buffer.full == Fullness.FULL and buffer.len() >= self.be for buffer in buffers), f'all buffers must be full and contain >= {self.be} elements'
-
+        assert all((buffer.full == Fullness.FULL or buffer.full == Fullness.PARTIAL) and buffer.len() >= self.be for buffer in buffers), f'all buffers must be full and contain >= {self.be} elements'
+        assert len(list(filter(lambda buffer: buffer.full == Fullness.PARTIAL, buffers))) <= 1, 'only zero or one buffer can be marked as PARTIAL'
         phi_tick = self._calculate_phi_tick(phi)
         y = self.collapse(buffers)
         position = max(0, ceil(phi_tick * self.be - 1))
