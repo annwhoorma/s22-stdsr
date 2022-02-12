@@ -11,11 +11,13 @@ variable rate of sampling.
 
 
 import random
+from typing import Optional
 
 from mrl98 import MRL98, Buffer, Element, Sequence, Fullness
 
 class MRL99(MRL98):
-    current_r = 2
+    def __init__(self, input_sequence: Sequence, b: int, be: int):
+        super().__init__(input_sequence, b, be)
 
     def _choose_one_from_next_r(self, sequence: Sequence, r: int) -> Element:
         '''
@@ -25,7 +27,7 @@ class MRL99(MRL98):
         @returns element: chosen element from the sequence
         '''
         # randomly generate index
-        index = random.randint(0, r)
+        index = random.randint(0, min(r, len(sequence)-1))
         element = sequence[index]
         del sequence[index]
         return element
@@ -46,9 +48,9 @@ class MRL99(MRL98):
         else:
             population = [self._choose_one_from_next_r(self.input_sequence, r) for _ in range(len(self.input_sequence))]
             buffer.populate(population, is_mrl98=False, weight=r, full=Fullness.PARTIAL)
-        assert (buffer.full == Fullness.Full or buffer.full == Fullness.PARTIAL) and buffer.weight == r, 'after NEW step, resulting buffer must be marked as full or partially full'
+        assert (buffer.full == Fullness.FULL or buffer.full == Fullness.PARTIAL), 'after NEW step, resulting buffer must be marked as full or partially full'
         assert buffer.weight == r, f'after NEW step, resulting buffer must have weight r={r}'
         return buffer
 
-    def _calculate_phi_tick(phi: float):
+    def _calculate_phi_tick(self, phi: float) -> float:
         return phi

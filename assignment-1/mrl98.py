@@ -29,6 +29,9 @@ class Buffer:
     A class to describe one buffer
     '''
     def __init__(self, be, elements:Optional[list]=None):
+        '''
+        
+        '''
         self.to_initial()
         self.be = be
         # for testing
@@ -144,14 +147,17 @@ class MRL98:
         return buffer
 
 
-    def collapse(self, buffers: 'list[Buffer]') -> Buffer:
+    def collapse(self, buffers: 'list[Buffer]', for_output=False) -> Buffer:
         '''
         COLLAPSE step: takes at least 2 buffers and returns a new buffer
         @param buffers: list of full buffers with assigned weights
         @return buffer: Y (see section 3.2 from the original paper)
         '''
         assert len(buffers) >= 2, 'should be 2 or more buffers'
-        assert all(buffer.full == Fullness.FULL and buffer.len() >= self.be for buffer in buffers), f'all buffers must be full and contain {self.be} or more elements'
+        if not for_output:
+            assert all(buffer.full == Fullness.FULL for buffer in buffers), f'all buffers must be full'
+        else:
+            assert all(buffer.full != Fullness.EMPTY for buffer in buffers), f'all buffers must be either full or partially full'
 
         sequence = [] # new sequence, future Y
         sum_of_weights = 0
@@ -163,7 +169,7 @@ class MRL98:
         i = 0 # counter
         min_len = sum_of_weights * self.be
         offset = ceil(sum_of_weights / 2)
-        while i <= min_len:
+        while i < min_len:
             minimum, buffer = self._get_min_from_buffers(buffers)
             i += buffer.weight
             if minimum == plus_inf or (i >= offset and self._divides(i-buffer.weight, i, offset+k*len(sequence))):
@@ -174,7 +180,7 @@ class MRL98:
         # populate the first buffer from `buffers` with Y, other buffers will be empty: see section 3.2 from the original paper
         y = buffers[self.y_idx]
         y.populate(sequence, weight=sum_of_weights, full=Fullness.FULL, is_initial=False, is_mrl98=True)
-        assert y.full == Fullness.FULL and y.len() >= self.be, f'Y must be full and contain >= {self.be} elements at the end of the COLLAPSE step'
+        assert y.full == Fullness.FULL, f'Y must be full at the end of the COLLAPSE step'
         return y
 
 
@@ -187,10 +193,10 @@ class MRL98:
         '''
         assert 0 <= phi <= 1, 'phi must be from [0, 1]'
         assert len(buffers) >= 2, 'should be 2 or more buffers'
-        assert all((buffer.full == Fullness.FULL or buffer.full == Fullness.PARTIAL) and buffer.len() >= self.be for buffer in buffers), f'all buffers must be full and contain >= {self.be} elements'
+        assert all((buffer.full == Fullness.FULL or buffer.full == Fullness.PARTIAL) for buffer in buffers), f'all buffers must be full'
         assert len(list(filter(lambda buffer: buffer.full == Fullness.PARTIAL, buffers))) <= 1, 'only zero or one buffer can be marked as PARTIAL'
         phi_tick = self._calculate_phi_tick(phi)
-        y = self.collapse(buffers)
+        y = self.collapse(buffers, for_output=True)
         position = max(0, ceil(phi_tick * self.be - 1))
         return y.get_elem(position)
 
