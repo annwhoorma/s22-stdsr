@@ -108,10 +108,8 @@ class SimulatedAnnealing:
             print(f'T={self.T}')
             self.T = self.T * self.annealing_rate
 
-    def run(self, visualize=False):
+    def run(self):
         self.current_iteration = 0
-        if visualize:
-            self._visualize()
         while self._continue_running():
             self._update_state()
             self._update_T()
@@ -134,16 +132,17 @@ class SimulatedAnnealing:
 if __name__ == '__main__':
     dirname = 'gifs'
     Path(dirname).mkdir(exist_ok=True)
-    coolings = [Cooling.Fast]#, Cooling.Mild, Cooling.Slow]
+    coolings = [Cooling.Slow, Cooling.Mild, Cooling.Fast]
+    decr_T_every_n_iters = 1
     for cooling in coolings:
         # try:
         cities_df = read_csv(PATH, take_sorted_n=30)
         cities, distance_dict, coordinates_dict = create_distance_matrix(cities_df)
-        sa = SimulatedAnnealing(distance_dict, coordinates_dict, Cooling.Slow, T_lower=50, decr_T_every_n_iters=10)
+        sa = SimulatedAnnealing(distance_dict, coordinates_dict, Cooling.Slow, T_lower=60, decr_T_every_n_iters=decr_T_every_n_iters)
         sa.run()
         all_states = sa.all_states
         last_dist = all_states[-1]['distance']
-        name = f'cool={cooling.value}_dist={last_dist}'
+        name = f'cool={cooling.value}_dist={last_dist}_decr={decr_T_every_n_iters}'
         print(last_dist, sa.T)
         animate_me(cities, all_states, coordinates_dict, dirname, name)
         # except:
