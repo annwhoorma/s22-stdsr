@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
 
-fig, ax = plt.figure(figsize=(20, 20)), plt.axes()
+
+plt.rcParams.update({'font.size': 23})
+fig, ax = plt.figure(figsize=(15, 15)), plt.axes()
 plt.xlabel('longitude')
 plt.ylabel('latitude')
 ln, = plt.plot([], [], lw=1)
@@ -31,4 +33,4 @@ def animate_me(cities, all_states, cities_coords, dirname, filename):
     anim = FuncAnimation(fig, update, frames=len(all_states), init_func=init, blit=True)
     for city in cities:
         ax.annotate(city, (cities_coords[city].lon, cities_coords[city].lat))
-    anim.save(f'{dirname}/{filename}.gif', fps=5)
+    anim.save(f'{dirname}/{filename}.gif', fps=300)
