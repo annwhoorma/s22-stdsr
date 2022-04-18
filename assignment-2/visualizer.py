@@ -6,7 +6,7 @@ warnings.filterwarnings("ignore")
 
 
 plt.rcParams.update({'font.size': 23})
-fig, ax = plt.figure(figsize=(15, 15)), plt.axes()
+fig, ax = plt.figure(figsize=(13, 13)), plt.axes()
 plt.xlabel('longitude')
 plt.ylabel('latitude')
 ln, = plt.plot([], [], lw=1)
@@ -26,7 +26,7 @@ def animate_me(cities, all_states, cities_coords, dirname, filename):
         for p in path:
             ydata.append(cities_coords[p].lat)
             xdata.append(cities_coords[p].lon)
-        ax.title.set_text(f"T = {state['temp']}, optimal_dist = {state['distance']}")
+        ax.title.set_text(f"T = {state['temp']}, optimal distance = {state['distance']} km")
         ln.set_data(xdata, ydata)
         return ln,
 
